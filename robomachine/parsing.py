@@ -26,6 +26,8 @@ from robomachine.rules import (AndRule, Condition, EquivalenceRule, OrRule,
                                RegexCondition, RegexNegatedCondition)
 
 
+INDENTATION_SPACES = 2
+
 end_of_line = Regex(r' *\n') ^ LineEnd()
 
 settings_table = Literal('*** Settings ***') + Regex(r'[^\*]+(?=\*)')
@@ -128,7 +130,7 @@ step = Regex(r'  [^\n\[][^\n]*(?=\n)') + LineEnd()
 step.leaveWhitespace()
 step.setParseAction(lambda t: [t[0]])
 
-action_header = White(min=2) + '[Actions]'
+action_header = White(exact=INDENTATION_SPACES) + '[Actions]'
 
 condition = splitter + Literal('when') + splitter + rule
 condition = condition ^ Regex(r'  +otherwise')
@@ -143,8 +145,9 @@ def parse_condition(cond):
 condition.leaveWhitespace()
 condition.setParseAction(parse_condition)
 condition = Optional(condition).setResultsName('condition')
-action = White(min=4) + Optional(robo_step + White(min=2)) + \
-         '==>' + White(min=2) + state_name + condition + end_of_line
+
+action = White(exact=(2 * INDENTATION_SPACES)) + Optional(robo_step + splitter) + \
+         '==>' + splitter + state_name + condition + end_of_line
 action.leaveWhitespace()
 action.setParseAction(lambda t: [Action(t.robo_step.rstrip(), t.state_name, t.condition)])
 
@@ -162,13 +165,18 @@ state = state_name + end_of_line + steps + actions
 state.leaveWhitespace()
 state.setParseAction(lambda p: State(p.state_name, list(p.steps), list(p.actions)))
 
-machine_header = Literal('*** Machine ***') + end_of_line
 states = state + ZeroOrMore(OneOrMore(LineEnd()) + state)
+# Remove non-states from list of states:
 states.setParseAction(lambda t: [[t[2 * i] for i in range(int((len(t) + 1) / 2))]])
 states = states.setResultsName('states')
+
 variables = ZeroOrMore(variable_definition).setResultsName('variables')
+
 rules = ZeroOrMore(rule + end_of_line).setResultsName('rules')
 rules.setParseAction(lambda t: [t[i] for i in range(len(t)) if i % 2 == 0])
+
+machine_header = Literal('*** Machine ***') + end_of_line
+
 machine = Optional(settings_table).setResultsName('settings_table') + \
           Optional(variables_table).setResultsName('variables_table') + \
           machine_header + ZeroOrMore(end_of_line) + variables + \

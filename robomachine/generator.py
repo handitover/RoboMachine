@@ -12,7 +12,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-
 from __future__ import print_function
 
 from robomachine.parsing import parse
@@ -48,7 +47,9 @@ class Generator(object):
         strategy_class = strategy(machine, max_actions, to_state)
         for test, values in strategy_class.tests():
             if i + skipped > max_tests:
-                print('--tests-max generation try limit {:d} reached with {:d} tests generated'.format(max_tests, i - 1))
+                print(
+                    '--tests-max generation try limit {:d} '.format(max_tests) +
+                    'reached with {:d} tests generated'.format(i - 1))
                 break
             if (tuple(test), tuple(values)) in generated_tests:
                 skipped += 1
@@ -58,7 +59,6 @@ class Generator(object):
             self._write_test('Test {:d}'.format(i), machine, output, test, values)
             i += 1
 
-
     def generate(self, machine, max_tests=1000, max_actions=None, to_state=None, output=None,
                  strategy=DepthFirstSearchStrategy):
         max_actions = -1 if max_actions is None else max_actions
@@ -67,7 +67,6 @@ class Generator(object):
         output.write('*** Test Cases ***')
         self._write_tests(machine, max_tests, max_actions, to_state, output, strategy)
         machine.write_keywords_table(output)
-
 
     def transform(self, text):
         output = StringIO()

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-BASENAME=model
+BASENAME=$1
 
 export PYTHONPATH=../..
 INFILE=$BASENAME.robomachine

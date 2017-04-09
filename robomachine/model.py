@@ -14,6 +14,8 @@
 
 import re
 
+INDENTATION_SPACES = 4
+
 
 class RoboMachine(object):
 
@@ -60,25 +62,31 @@ class RoboMachine(object):
 
     def write_keywords_table(self, output):
         for content in self._keywords_table:
-            output.write('\n'+content)
+            output.write('\n' + content)
         if not self._keywords_table:
-            output.write('\n*** Keywords ***\n')
+            output.write('\n*** Keywords ***')
         if self.variables:
             self.write_variable_setter(output)
         for state in self.states:
             if state.steps:
-                output.write(state.name+'\n')
+                output.write(state.name + '\n')
                 state.write_steps_to(output)
 
     def write_variable_setter(self, output):
-        output.write('Set Machine Variables\n')
-        output.write('  [Arguments]  {:s}\n'.format('  '.join(variable.name for variable in self.variables)))
+        output.write('\nSet Machine Variables')
+        output.write(
+            '\n' + ' ' * INDENTATION_SPACES + 
+            '[Arguments]  {:s}\n'.format('  '.join(variable.name for variable in self.variables)))
         for variable in self.variables:
-            output.write('  Set Test Variable  \\{:s}\n'.format(variable.name))
+            output.write(
+                ' ' * INDENTATION_SPACES + 
+                'Set Test Variable  \\{:s}\n'.format(variable.name))
 
     @staticmethod
     def write_variable_setting_step(values, output):
-        output.write('  Set Machine Variables  {:s}\n'.format('  '.join(values)))
+        output.write(
+            ' ' * INDENTATION_SPACES + 
+            'Set Machine Variables  {:s}\n'.format('  '.join(values)))
 
     def rules_are_ok(self, values):
         value_mapping = dict((v.name, value) for v, value in zip(self.variables, values))
@@ -119,7 +127,14 @@ class State(object):
 
     def write_to(self, output):
         if self.steps:
-            output.write('  {:s}\n'.format(self.name))
+            output.write(
+                ' ' * INDENTATION_SPACES + '{:s}\n'.format(self.name))
+    
+    def __unicode__(self):
+        return str(self)
+    
+    def __str__(self):
+        return self.name
 
 
 class Action(object):
@@ -149,7 +164,8 @@ class Action(object):
 
     def write_to(self, output):
         if self.name:
-            output.write('  {:s}\n'.format(self.name))
+            output.write(
+            ' ' * INDENTATION_SPACES + '{:s}\n'.format(self.name))
         self.next_state.write_to(output)
 
 
