@@ -25,12 +25,7 @@ from robomachine.rules import (AndRule, Condition, EquivalenceRule, OrRule,
                                LessThanCondition, LessThanOrEqualCondition,
                                RegexCondition, RegexNegatedCondition)
 
-
-def debug_print(name, l, t):
-    print('%s   %s, %s' % (name, l, t))
-
-
-INDENTATION_SPACES = 2
+indentation_spaces = 4
 
 end_of_line = Regex(r' *\n') ^ LineEnd()
 
@@ -44,12 +39,10 @@ keywords_table.setParseAction(lambda t: '\n'.join(t))
 state_name = Regex(r'\w+( \w+)*')
 state_name.leaveWhitespace()
 state_name = state_name.setResultsName('state_name')
-state_name.setParseAction(lambda s,l,t: debug_print('STATE  :', l, t))
 
 robo_step = Regex(r'([\w\$\{\}][ \w\$\{\}]*[\w\}]|\w)')
 robo_step.leaveWhitespace()
 robo_step = robo_step.setResultsName('robo_step')
-robo_step.setParseAction(lambda s,l,t: debug_print('STEP   :', l, t))
 
 variable = Regex(Variable.REGEX)
 
@@ -132,7 +125,12 @@ or_rule.leaveWhitespace()
 
 rule << (not_rule ^ equivalence_rule ^ implication_rule ^ and_rule ^ or_rule ^ closed_rule)
 
-step = White(exact=INDENTATION_SPACES) + Regex(r'[^\n\[][^\n]*(?=\n)') + LineEnd()
+action_header = Regex(r' {2,}') + Literal('[Actions]')
+
+INDENTATION_SPACES = 2
+
+#step = Regex(' ' * INDENTATION_SPACES + r'[^\n\[][^\n]*(?=\n)') + LineEnd()
+step = Regex(r' {2,}' + r'[^\n\[][^\n]*(?=\n)') + LineEnd()
 step.leaveWhitespace()
 step.setParseAction(lambda t: [t[0]])
 
@@ -145,23 +143,15 @@ def parse_condition(cond):
         return [cond[3]]
     return ['otherwise']
 
-
 condition.leaveWhitespace()
 condition.setParseAction(parse_condition)
 condition = Optional(condition).setResultsName('condition')
 
-action_header = Regex(r'\s{2,}') + Literal('[Actions]')
-action_header.setParseAction(lambda s,l,t: debug_print('ACTIONS:', l, t))
-
-action = White(exact=(2 * INDENTATION_SPACES)) + Optional(robo_step + splitter) + \
+#action = White(exact=2 * INDENTATION_SPACES) + Optional(robo_step + splitter) + \
+action = Regex(r' {4,}') + Optional(robo_step + splitter) + \
          '==>' + splitter + state_name + condition + end_of_line
 action.leaveWhitespace()
-
-def dummy_t(s, l, t):
-    print('ACTION :   %s, %s' % (l, t))
-    return [Action(t.robo_step.rstrip(), t.state_name, t.condition)]
-#action.setParseAction(lambda t: [Action(t.robo_step.rstrip(), t.state_name, t.condition)])
-action.setParseAction(dummy_t)
+action.setParseAction(lambda t: [Action(t.robo_step.rstrip(), t.state_name, t.condition)])
 
 actions = action_header + end_of_line + OneOrMore(action).setResultsName('actions')
 actions = Optional(actions)

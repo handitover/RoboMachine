@@ -13,6 +13,7 @@
 #  limitations under the License.
 import random
 
+
 class _Strategy(object):
 
     def __init__(self, machine, max_actions, to_state=None):
@@ -34,9 +35,9 @@ class DepthFirstSearchStrategy(_Strategy):
                 yield test, [v.current_value for v in self._machine.variables]
 
     def _variable_value_sets(self, variables):
-            if not variables:
-                return ([],)
-            return (vs for vs in self._var_set(variables) if self._machine.rules_are_ok(vs))
+        if not variables:
+            return ([],)
+        return (vs for vs in self._var_set(variables) if self._machine.rules_are_ok(vs))
 
     def _var_set(self, vars):
         if not vars:
@@ -51,9 +52,9 @@ class DepthFirstSearchStrategy(_Strategy):
         else:
             at_least_one_generated = False
             for action in state.actions:
-                for test in self._generate_all_from(action.next_state, max_actions-1):
+                for test in self._generate_all_from(action.next_state, max_actions - 1):
                     at_least_one_generated = True
-                    yield [action]+test
+                    yield [action] + test
             if not at_least_one_generated and self._to_state == state.name:
                 yield []
 
@@ -84,4 +85,3 @@ class RandomStrategy(_Strategy):
             candidate = [random.choice(v.values) for v in self._machine.variables]
             if self._machine.rules_are_ok(candidate):
                 return candidate
-
